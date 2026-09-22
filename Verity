@@ -10,7 +10,7 @@ const commands = [
     .setDescription("คุยกับ AI")
     .addStringOption(option =>
       option
-        .setName("ข้อความ")
+        .setName("message")
         .setDescription("ข้อความที่ต้องการถาม AI")
         .setRequired(true)
     )
@@ -38,7 +38,7 @@ client.on("interactionCreate", async interaction => {
   if (!interaction.isChatInputCommand()) return;
   if (interaction.commandName !== "chat") return;
 
-  const message = interaction.options.getString("ข้อความ");
+  const message = interaction.options.getString("message");
 
   await interaction.deferReply();
 
