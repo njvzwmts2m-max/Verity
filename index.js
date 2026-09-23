@@ -91,7 +91,15 @@ if (interaction.commandName !== "chat") return;
 
   const message = interaction.options.getString("message");
 
-  await interaction.deferReply();
+const fs = require("fs");
+
+let knowledge = {};
+
+if (fs.existsSync("knowledge.json")) {
+  knowledge = JSON.parse(fs.readFileSync("knowledge.json", "utf8"));
+}
+
+await interaction.deferReply();
 
   try {
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -103,15 +111,20 @@ if (interaction.commandName !== "chat") return;
       body: JSON.stringify({
         model: "openrouter/free",
         messages: [
-          {
-            role: "system",
-            content: "คุณเป็นบอทเพื่อนคุยภาษาไทย ตอบเป็นกันเอง กระชับ และเข้าใจง่าย"
-          },
-          {
-            role: "user",
-            content: message
-          }
-        ]
+  {
+    role: "system",
+    content: `คุณเป็นบอทเพื่อนคุยภาษาไทย ตอบเป็นกันเอง กระชับ และเข้าใจง่าย
+
+ข้อมูลที่ผู้ใช้สอนบอท:
+${JSON.stringify(knowledge, null, 2)}
+
+ถ้าคำถามเกี่ยวข้องกับข้อมูลที่สอนไว้ ให้ใช้ข้อมูลนั้นในการตอบ`
+  },
+  {
+    role: "user",
+    content: message
+  }
+]
       })
     });
 
