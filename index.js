@@ -65,10 +65,25 @@ client.on("ready", () => {
 client.on("interactionCreate", async interaction => {
   if (!interaction.isChatInputCommand()) return;
   if (interaction.commandName === "สอน") {
+  const fs = require("fs");
+
   const question = interaction.options.getString("คำถาม");
   const answer = interaction.options.getString("คำตอบ");
 
-  await interaction.reply(`สอนสำเร็จ! 🧠\nคำถาม: ${question}\nคำตอบ: ${answer}`);
+  let knowledge = {};
+
+  if (fs.existsSync("knowledge.json")) {
+    knowledge = JSON.parse(fs.readFileSync("knowledge.json", "utf8"));
+  }
+
+  knowledge[question] = answer;
+
+  fs.writeFileSync(
+    "knowledge.json",
+    JSON.stringify(knowledge, null, 2)
+  );
+
+  await interaction.reply(`สอนสำเร็จ! 🧠\n${question} → ${answer}`);
   return;
 }
 
