@@ -142,4 +142,54 @@ ${JSON.stringify(knowledge, null, 2)}
   }
 });
 
+});
+
+client.on("messageCreate", async message => {
+  if (message.author.bot) return;
+
+  if (!message.mentions.has(client.user)) return;
+
+  const text = message.content
+    .replace(`<@${client.user.id}>`, "")
+    .trim();
+
+  if (!text) {
+    await message.reply("มีอะไรให้ช่วยไหม? 👀");
+    return;
+  }
+
+  try {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "openrouter/free",
+        messages: [
+          {
+            role: "system",
+            content: "คุณคือ Verity เพื่อนคุยภาษาไทย ตอบเป็นกันเอง กระชับ และเข้าใจง่าย"
+          },
+          {
+            role: "user",
+            content: text
+          }
+        ]
+      })
+    });
+
+    const data = await response.json();
+    const answer =
+      data.choices?.[0]?.message?.content ||
+      "ตอนนี้ฉันตอบไม่ได้ 😭";
+
+    await message.reply(answer.slice(0, 2000));
+  } catch (error) {
+    console.error(error);
+    await message.reply("เกิดข้อผิดพลาด ลองใหม่อีกครั้งนะ");
+  }
+});
+
 client.login(process.env.DISCORD_TOKEN);
