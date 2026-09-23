@@ -1,3 +1,13 @@
+const http = require("http");
+
+const port = process.env.PORT || 10000;
+
+http.createServer((req, res) => {
+  res.writeHead(200);
+  res.end("Verity is online!");
+}).listen(port, "0.0.0.0", () => {
+  console.log(`Web server running on port ${port}`);
+});
 const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } = require("discord.js");
 
 const client = new Client({
