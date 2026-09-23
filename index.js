@@ -59,7 +59,15 @@ client.on("ready", () => {
 
 client.on("interactionCreate", async interaction => {
   if (!interaction.isChatInputCommand()) return;
-  if (interaction.commandName !== "chat") return;
+  if (interaction.commandName === "สอน") {
+  const question = interaction.options.getString("คำถาม");
+  const answer = interaction.options.getString("คำตอบ");
+
+  await interaction.reply(`สอนสำเร็จ! 🧠\nคำถาม: ${question}\nคำตอบ: ${answer}`);
+  return;
+}
+
+if (interaction.commandName !== "chat") return;
 
   const message = interaction.options.getString("message");
 
