@@ -21,6 +21,17 @@ const commands = [
     // ...ของเดิม...
 
   // เพิ่ม /สอน ตรงนี้
+  const commands = [
+  new SlashCommandBuilder()
+    .setName("chat")
+    .setDescription("คุยกับ AI")
+    .addStringOption(option =>
+      option
+        .setName("message")
+        .setDescription("ข้อความที่ต้องการถาม AI")
+        .setRequired(true)
+    ),
+
   new SlashCommandBuilder()
     .setName("สอน")
     .setDescription("สอนข้อมูลใหม่ให้บอท")
