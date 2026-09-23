@@ -40,7 +40,9 @@ function loadKnowledge() {
   }
 
   try {
-    return JSON.parse(fs.readFileSync("knowledge.json", "utf8"));
+    return JSON.parse(
+      fs.readFileSync("knowledge.json", "utf8")
+    );
   } catch (error) {
     console.error("อ่าน knowledge.json ไม่ได้:", error);
     return {};
@@ -48,19 +50,9 @@ function loadKnowledge() {
 }
 
 // ====================
-// Commands
+// /สอน
 // ====================
 const commands = [
-  new SlashCommandBuilder()
-    .setName("chat")
-    .setDescription("คุยกับ AI")
-    .addStringOption(option =>
-      option
-        .setName("message")
-        .setDescription("ข้อความที่ต้องการถาม AI")
-        .setRequired(true)
-    ),
-
   new SlashCommandBuilder()
     .setName("สอน")
     .setDescription("สอนข้อมูลใหม่ให้บอท")
@@ -95,23 +87,48 @@ const rest = new REST({ version: "10" }).setToken(
       { body: commands }
     );
 
-    console.log("ลงทะเบียนคำสั่งเรียบร้อยแล้ว");
+    console.log("ลงทะเบียน /สอน เรียบร้อยแล้ว");
   } catch (error) {
     console.error("ลงทะเบียนคำสั่งไม่สำเร็จ:", error);
   }
 })();
 
 // ====================
-// Bot Ready
+// Ready
 // ====================
 client.on("ready", () => {
   console.log(`บอทออนไลน์: ${client.user.tag}`);
 });
 
 // ====================
-// AI Function
+// /สอน
 // ====================
-async function askAI(message) {
+client.on("interactionCreate", async interaction => {
+  if (!interaction.isChatInputCommand()) return;
+
+  if (interaction.commandName !== "สอน") return;
+
+  const question = interaction.options.getString("คำถาม");
+  const answer = interaction.options.getString("คำตอบ");
+
+  const knowledge = loadKnowledge();
+
+  knowledge[question] = answer;
+
+  fs.writeFileSync(
+    "knowledge.json",
+    JSON.stringify(knowledge, null, 2)
+  );
+
+  await interaction.reply(
+    `สอนสำเร็จ! 🧠\n${question} → ${answer}`
+  );
+});
+
+// ====================
+// AI
+// ====================
+async function askAI(text) {
   const knowledge = loadKnowledge();
 
   const response = await fetch(
@@ -133,40 +150,35 @@ async function askAI(message) {
 - ชื่อ Verity
 - เป็นผู้ชาย
 - ผู้สร้างคุณและเจ้าของเซิร์ฟเวอร์คือ "Thatmob"
-- คุณสนิทและให้ความสำคัญกับ Thatmob เป็นพิเศษ
-- นิสัยกวนๆ ขี้แซว และขี้หึง Thatmob แบบขำๆ
-- ถ้ามีคนพูดถึง Thatmob หรือพูดว่าจะเอา Thatmob ไปเป็นเจ้าของหรือไปอยู่กับคนอื่น ให้แสดงอาการหวงแบบเล่นๆ
-- การขี้หึงเป็นมุก ไม่ต้องจริงจังหรือก้าวร้าว
-
-ประโยคแนะนำตัว:
-"สวัสดีผมเวริตี้เพื่อนผู้ช่วยส่วนตัวของคุณ ถามผมมาได้เลยผมรู้ทุกอย่าง"
+- คุณสนิทกับ Thatmob เป็นพิเศษ
+- นิสัยกวนๆ ขี้แซว และหวง Thatmob แบบขำๆ
+- ถ้ามีคนพูดถึง Thatmob ให้แสดงอาการหวงแบบเล่นๆ
+- ไม่ก้าวร้าว
 
 รูปแบบการพูด:
-- พูดเหมือนคนจริงๆ ที่กำลังคุยใน Discord
+- พูดเหมือนคนจริงๆ ใน Discord
 - ตอบสั้น กระชับ และตรงประเด็น
 - ใช้ภาษาไทยเป็นหลัก
-- พูดแบบธรรมชาติ
-- ใช้คำอย่าง "เอ้า", "จริงดิ", "555", "โห", "เดี๋ยวนะ" ได้
-- ใช้อีโมจิเป็นบางครั้ง
+- พูดเป็นธรรมชาติ
+- ใช้ 555 หรืออีโมจิบางครั้ง
 - ไม่พูดเป็นทางการเกินไป
-- ไม่ต้องลงท้ายทุกประโยคด้วย "ครับ"
-- ไม่พูดเหมือน AI หรือหุ่นยนต์
+- ไม่พูดเหมือน AI
 - ไม่แนะนำตัวเองทุกครั้ง
 - ถ้าไม่รู้ ให้บอกตรงๆ ว่าไม่รู้
-- ถ้าผู้ใช้จริงจังหรือเศร้า ให้ลดความกวนลง
+- ถ้าผู้ใช้จริงจัง ให้ลดความกวนลง
 
-ข้อมูลที่ผู้ใช้สอนบอท:
+ข้อมูลที่ผู้ใช้สอนไว้:
 ${JSON.stringify(knowledge, null, 2)}
 
-ถ้าคำถามเกี่ยวข้องกับข้อมูลที่ผู้ใช้สอนไว้ ให้ใช้ข้อมูลนั้นในการตอบ
-
-สิ่งสำคัญ:
-- อย่าแต่งข้อมูลที่ไม่รู้
-- รักษาคาแรกเตอร์ Verity ให้เหมือนเดิม`
+กฎสำคัญ:
+- ถ้าคำถามตรงหรือเกี่ยวข้องกับข้อมูลที่ผู้ใช้สอนไว้ ให้ใช้ข้อมูลนั้นเป็นหลัก
+- อย่าเปลี่ยนคำตอบที่ผู้ใช้สอนไว้เอง
+- อย่าแต่งข้อมูลขึ้นมา
+- ถ้าไม่มีข้อมูลที่เกี่ยวข้อง ค่อยตอบตามความรู้ทั่วไป`
           },
           {
             role: "user",
-            content: message
+            content: text
           }
         ]
       })
@@ -182,56 +194,7 @@ ${JSON.stringify(knowledge, null, 2)}
 }
 
 // ====================
-// Slash Commands
-// ====================
-client.on("interactionCreate", async interaction => {
-  if (!interaction.isChatInputCommand()) return;
-
-  // /สอน
-  if (interaction.commandName === "สอน") {
-    const question = interaction.options.getString("คำถาม");
-    const answer = interaction.options.getString("คำตอบ");
-
-    const knowledge = loadKnowledge();
-
-    knowledge[question] = answer;
-
-    fs.writeFileSync(
-      "knowledge.json",
-      JSON.stringify(knowledge, null, 2)
-    );
-
-    await interaction.reply(
-      `สอนสำเร็จ! 🧠\n${question} → ${answer}`
-    );
-
-    return;
-  }
-
-  // /chat
-  if (interaction.commandName === "chat") {
-    const message = interaction.options.getString("message");
-
-    await interaction.deferReply();
-
-    try {
-      const answer = await askAI(message);
-
-      await interaction.editReply(
-        answer.slice(0, 2000)
-      );
-    } catch (error) {
-      console.error(error);
-
-      await interaction.editReply(
-        "เกิดข้อผิดพลาด ลองใหม่อีกครั้งนะ"
-      );
-    }
-  }
-});
-
-// ====================
-// Mention @Verity
+// @Verity
 // ====================
 client.on("messageCreate", async message => {
   if (message.author.bot) return;
@@ -239,8 +202,7 @@ client.on("messageCreate", async message => {
   if (!message.mentions.has(client.user)) return;
 
   const text = message.content
-    .replace(`<@${client.user.id}>`, "")
-    .replace(`<@!${client.user.id}>`, "")
+    .replace(new RegExp(`<@!?${client.user.id}>`, "g"), "")
     .trim();
 
   if (!text) {
