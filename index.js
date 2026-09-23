@@ -15,16 +15,29 @@ const client = new Client({
 });
 
 const commands = [
+  // /chat เดิมของเธอ
   new SlashCommandBuilder()
     .setName("chat")
-    .setDescription("คุยกับ AI")
+    // ...ของเดิม...
+
+  // เพิ่ม /สอน ตรงนี้
+  new SlashCommandBuilder()
+    .setName("สอน")
+    .setDescription("สอนข้อมูลใหม่ให้บอท")
     .addStringOption(option =>
       option
-        .setName("message")
-        .setDescription("ข้อความที่ต้องการถาม AI")
+        .setName("คำถาม")
+        .setDescription("สิ่งที่อยากให้บอทจำ")
+        .setRequired(true)
+    )
+    .addStringOption(option =>
+      option
+        .setName("คำตอบ")
+        .setDescription("คำตอบที่บอทควรจำ")
         .setRequired(true)
     )
 ].map(command => command.toJSON());
+
 
 const rest = new REST({ version: "10" }).setToken(process.env.DISCORD_TOKEN);
 
