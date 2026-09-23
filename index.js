@@ -142,7 +142,6 @@ ${JSON.stringify(knowledge, null, 2)}
   }
 });
 
-});
 
 client.on("messageCreate", async message => {
   if (message.author.bot) return;
