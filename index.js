@@ -157,7 +157,6 @@ await interaction.deferReply();
   }
 ]
 
-ข้อมูลที่ผู้ใช้สอนบอท:
 ${JSON.stringify(knowledge, null, 2)}
 
 ถ้าคำถามเกี่ยวข้องกับข้อมูลที่สอนไว้ ให้ใช้ข้อมูลนั้นในการตอบ`
