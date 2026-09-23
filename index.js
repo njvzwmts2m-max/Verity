@@ -14,12 +14,6 @@ const client = new Client({
   intents: [GatewayIntentBits.Guilds]
 });
 
-const commands = [
-  // /chat เดิมของเธอ
-  new SlashCommandBuilder()
-    .setName("chat")
-    // ...ของเดิม...
-
   // เพิ่ม /สอน ตรงนี้
   const commands = [
   new SlashCommandBuilder()
