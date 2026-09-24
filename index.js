@@ -1,5 +1,6 @@
 const http = require("http");
 const fs = require("fs");
+
 const {
   Client,
   GatewayIntentBits,
@@ -8,11 +9,12 @@ const {
   SlashCommandBuilder
 } = require("discord.js");
 
-const port = process.env.PORT || 10000;
-
 // ====================
 // Web Server
 // ====================
+
+const port = process.env.PORT || 10000;
+
 http.createServer((req, res) => {
   res.writeHead(200);
   res.end("Verity is online!");
@@ -23,6 +25,7 @@ http.createServer((req, res) => {
 // ====================
 // Discord Client
 // ====================
+
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -34,6 +37,7 @@ const client = new Client({
 // ====================
 // Knowledge
 // ====================
+
 function loadKnowledge() {
   if (!fs.existsSync("knowledge.json")) {
     return {};
@@ -50,108 +54,247 @@ function loadKnowledge() {
 }
 
 // ====================
-// /สอน
+// Commands
 // ====================
+
 const commands = [
+
+  // /สอน
   new SlashCommandBuilder()
     .setName("สอน")
-    .setDescription("สอนข้อมูลใหม่ให้บอท")
+    .setDescription("สอนข้อมูลใหม่ให้ Verity")
     .addStringOption(option =>
       option
         .setName("คำถาม")
-        .setDescription("สิ่งที่อยากให้บอทจำ")
+        .setDescription("สิ่งที่อยากให้ Verity จำ")
         .setRequired(true)
     )
     .addStringOption(option =>
       option
         .setName("คำตอบ")
-        .setDescription("คำตอบที่บอทควรจำ")
+        .setDescription("คำตอบที่ Verity ควรจำ")
         .setRequired(true)
-    )
+    ),
+
+  // /ถาม
+  new SlashCommandBuilder()
+    .setName("ถาม")
+    .setDescription("ให้ Verity สุ่มคำถามมาให้ตอบ")
+
 ].map(command => command.toJSON());
 
 // ====================
 // Register Commands
 // ====================
-const rest = new REST({ version: "10" }).setToken(
-  process.env.DISCORD_TOKEN
-);
+
+const rest = new REST({ version: "10" })
+  .setToken(process.env.DISCORD_TOKEN);
 
 (async () => {
   try {
+
     await rest.put(
       Routes.applicationGuildCommands(
         process.env.CLIENT_ID,
         process.env.GUILD_ID
       ),
-      { body: commands }
+      {
+        body: commands
+      }
     );
 
-    console.log("ลงทะเบียน /สอน เรียบร้อยแล้ว");
+    console.log("ลงทะเบียน /สอน และ /ถาม เรียบร้อยแล้ว");
+
   } catch (error) {
-    console.error("ลงทะเบียนคำสั่งไม่สำเร็จ:", error);
+
+    console.error(
+      "ลงทะเบียนคำสั่งไม่สำเร็จ:",
+      error
+    );
+
   }
 })();
 
 // ====================
 // Ready
 // ====================
-client.on("ready", () => {
-  console.log(`บอทออนไลน์: ${client.user.tag}`);
+
+client.once("ready", () => {
+
+  console.log(
+    `บอทออนไลน์: ${client.user.tag}`
+  );
+
 });
 
 // ====================
-// /สอน
+// Questions
 // ====================
-client.on("interactionCreate", async interaction => {
-  if (!interaction.isChatInputCommand()) return;
 
-  if (interaction.commandName !== "สอน") return;
+const questions = [
 
-  const question = interaction.options.getString("คำถาม");
-  const answer = interaction.options.getString("คำตอบ");
+  // ทั่วไป
+  "วันนี้เป็นไงบ้าง? 👀",
+  "ช่วงนี้มีอะไรที่ทำให้มีความสุขบ้าง?",
+  "ถ้ามีวันหยุดเพิ่มอีก 1 วัน จะเอาไปทำอะไร?",
+  "ชอบอยู่บ้านหรือออกไปเที่ยวมากกว่ากัน?",
+  "ชอบกลางวันหรือกลางคืนมากกว่ากัน?",
 
-  const knowledge = loadKnowledge();
+  // เกม
+  "ช่วงนี้เล่นเกมอะไรอยู่?",
+  "ถ้าเลือกเข้าไปอยู่ในเกมได้ 1 เกม จะเลือกเกมอะไร?",
+  "เกมไหนที่เล่นแล้วติดมากที่สุด?",
+  "ถ้า Verity เข้าไปเล่นเกมกับคุณ คุณจะให้ผมเล่นตำแหน่งอะไร? 😂",
 
-  knowledge[question] = answer;
+  // สมมติสถานการณ์
+  "ถ้าเลือกพลังวิเศษได้ 1 อย่าง จะเลือกอะไร?",
+  "ถ้าได้เที่ยวฟรี 1 ประเทศ จะไปประเทศไหน?",
+  "ถ้ามีเงิน 1 ล้านบาท จะเอาไปทำอะไร?",
+  "ถ้าย้อนเวลาได้ 1 วัน คุณจะเลือกย้อนกลับไปวันไหน?",
+  "ถ้าได้เป็นตัวละครในเกม 1 วัน อยากเป็นใคร?",
 
-  fs.writeFileSync(
-    "knowledge.json",
-    JSON.stringify(knowledge, null, 2)
-  );
+  // กวน ๆ
+  "ถ้าผมหายไป 1 วัน คุณจะคิดถึงผมไหม? 😂",
+  "ถ้า Verity มีร่างจริง อยากให้ผมหน้าตาเป็นยังไง?",
+  "ถ้าต้องกินอาหารอย่างเดียวไป 1 เดือน จะเลือกอะไร?",
+  "ถ้าให้ผมตั้งชื่อใหม่ คุณจะตั้งชื่อว่าอะไร?",
+  "ถ้า Thatmob กับ Verity แข่งกัน คุณคิดว่าใครจะชนะ? 👀",
 
-  await interaction.reply(
-    `สอนสำเร็จ! 🧠\n${question} → ${answer}`
-  );
-});
+  // ความชอบ
+  "ชอบกินอาหารอะไรที่สุด?",
+  "มีเพลงที่ฟังซ้ำบ่อย ๆ ไหม?",
+  "ชอบทะเลหรือภูเขา?",
+  "ชอบแมวหรือหมา?",
+  "ถ้าเลือกงานในฝันได้ 1 งาน อยากทำอะไร?",
+
+  // อนาคต
+  "มีอะไรที่อยากทำให้สำเร็จในปีนี้ไหม?",
+  "โตขึ้นอยากทำอะไร?",
+  "มีสถานที่ที่อยากไปสักครั้งไหม?",
+  "ถ้ามีโอกาสเรียนรู้อะไรก็ได้ 1 อย่าง อยากเรียนอะไร?",
+  "ถ้าสามารถสร้างอะไรก็ได้ 1 อย่าง จะสร้างอะไร?"
+];
+
+// ====================
+// Interaction
+// ====================
+
+client.on(
+  "interactionCreate",
+  async interaction => {
+
+    if (!interaction.isChatInputCommand()) {
+      return;
+    }
+
+    // ====================
+    // /สอน
+    // ====================
+
+    if (interaction.commandName === "สอน") {
+
+      const question =
+        interaction.options.getString("คำถาม");
+
+      const answer =
+        interaction.options.getString("คำตอบ");
+
+      const knowledge = loadKnowledge();
+
+      knowledge[question] = answer;
+
+      try {
+
+        fs.writeFileSync(
+          "knowledge.json",
+          JSON.stringify(
+            knowledge,
+            null,
+            2
+          )
+        );
+
+        await interaction.reply(
+          `สอนสำเร็จ! 🧠\n\n${question} → ${answer}`
+        );
+
+      } catch (error) {
+
+        console.error(
+          "บันทึกข้อมูลไม่สำเร็จ:",
+          error
+        );
+
+        await interaction.reply(
+          "บันทึกข้อมูลไม่สำเร็จครับ 😭"
+        );
+
+      }
+
+      return;
+    }
+
+    // ====================
+    // /ถาม
+    // ====================
+
+    if (interaction.commandName === "ถาม") {
+
+      const randomQuestion =
+        questions[
+          Math.floor(
+            Math.random() * questions.length
+          )
+        ];
+
+      await interaction.reply(
+        `🎲 **คำถามของ Verity**\n\n${randomQuestion}`
+      );
+
+      return;
+    }
+
+  }
+);
 
 // ====================
 // AI
 // ====================
+
 async function askAI(text) {
+
   const knowledge = loadKnowledge();
 
   const response = await fetch(
     "https://openrouter.ai/api/v1/chat/completions",
     {
       method: "POST",
+
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`
+        "Authorization":
+          `Bearer ${process.env.OPENROUTER_API_KEY}`
       },
+
       body: JSON.stringify({
+
         model: "openrouter/free",
+
         messages: [
+
           {
             role: "system",
-            content: `คุณคือ Verity ผู้ชายและเป็นเพื่อนผู้ช่วยส่วนตัวของเจ้าของเซิร์ฟเวอร์
+
+            content: `
+คุณคือ Verity ผู้ชายและเป็นเพื่อนผู้ช่วยส่วนตัวของเจ้าของเซิร์ฟเวอร์
 
 ตัวตน:
 - ชื่อ Verity
 - เป็นผู้ชาย
 - ผู้สร้างคุณและเจ้าของเซิร์ฟเวอร์คือ "Thatmob"
 - คุณสนิทกับ Thatmob เป็นพิเศษ
-- นิสัยกวนๆ ขี้แซว และหวง Thatmob แบบขำๆ
+- นิสัยกวนๆ ขี้แซว
+- หวง Thatmob แบบขำๆ
 - ถ้ามีคนพูดถึง Thatmob ให้แสดงอาการหวงแบบเล่นๆ
 - ไม่ก้าวร้าว
 
@@ -173,61 +316,131 @@ ${JSON.stringify(knowledge, null, 2)}
 กฎสำคัญ:
 - ถ้าคำถามตรงหรือเกี่ยวข้องกับข้อมูลที่ผู้ใช้สอนไว้ ให้ใช้ข้อมูลนั้นเป็นหลัก
 - อย่าเปลี่ยนคำตอบที่ผู้ใช้สอนไว้เอง
-- อย่าแต่งข้อมูลขึ้นมา
-- ถ้าไม่มีข้อมูลที่เกี่ยวข้อง ค่อยตอบตามความรู้ทั่วไป`
+- อย่าแต่งข้อมูลที่ผู้ใช้สอนไว้ขึ้นมา
+- ถ้าไม่มีข้อมูลที่เกี่ยวข้อง ค่อยตอบตามความรู้ทั่วไป
+`
           },
+
           {
             role: "user",
             content: text
           }
+
         ]
+
       })
     }
   );
 
   const data = await response.json();
 
-  return (
-    data.choices?.[0]?.message?.content ||
-    "ตอนนี้ผมตอบไม่ได้ 😭"
+  // แสดง error จริงใน Render Logs
+  console.log(
+    "OpenRouter Status:",
+    response.status
   );
+
+  if (!response.ok) {
+
+    console.error(
+      "OpenRouter Error:",
+      JSON.stringify(data)
+    );
+
+    throw new Error(
+      data?.error?.message ||
+      `OpenRouter HTTP ${response.status}`
+    );
+  }
+
+  const answer =
+    data.choices?.[0]?.message?.content;
+
+  if (!answer) {
+
+    console.error(
+      "OpenRouter ไม่มีคำตอบ:",
+      JSON.stringify(data)
+    );
+
+    return "ผมขอพักผ่อนก่อนนะครับ 🙏🙏";
+  }
+
+  return answer;
 }
 
 // ====================
 // @Verity
 // ====================
-client.on("messageCreate", async message => {
-  if (message.author.bot) return;
 
-  if (!message.mentions.has(client.user)) return;
+client.on(
+  "messageCreate",
+  async message => {
 
-  const text = message.content
-    .replace(new RegExp(`<@!?${client.user.id}>`, "g"), "")
-    .trim();
+    // ไม่ตอบบอทตัวอื่น
+    if (message.author.bot) {
+      return;
+    }
 
-  if (!text) {
-    await message.reply("มีอะไรให้ช่วยไหม? 👀");
-    return;
+    // ต้องแท็ก Verity
+    if (!message.mentions.has(client.user)) {
+      return;
+    }
+
+    // เอา @Verity ออกจากข้อความ
+    const text =
+      message.content
+        .replace(
+          new RegExp(
+            `<@!?${client.user.id}>`,
+            "g"
+          ),
+          ""
+        )
+        .trim();
+
+    // ถ้าแท็กเฉย ๆ
+    if (!text) {
+
+      await message.reply(
+        "มีอะไรให้ช่วยไหม? 👀"
+      );
+
+      return;
+    }
+
+    try {
+
+      // กำลังพิมพ์...
+      await message.channel.sendTyping();
+
+      const answer =
+        await askAI(text);
+
+      await message.reply(
+        answer.slice(0, 2000)
+      );
+
+    } catch (error) {
+
+      console.error(
+        "เกิดข้อผิดพลาด:",
+        error
+      );
+
+      await message.reply(
+        "ผมขอพักผ่อนก่อนนะครับ 🙏🙏"
+      );
+
+    }
+
   }
-
-  try {
-    await message.channel.sendTyping();
-
-    const answer = await askAI(text);
-
-    await message.reply(
-      answer.slice(0, 2000)
-    );
-  } catch (error) {
-    console.error(error);
-
-    await message.reply(
-      "เกิดข้อผิดพลาด ลองใหม่อีกครั้งนะ"
-    );
-  }
-});
+);
 
 // ====================
 // Login
 // ====================
-client.login(process.env.DISCORD_TOKEN);
+
+client.login(
+  process.env.DISCORD_TOKEN
+);
