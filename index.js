@@ -974,6 +974,24 @@ client.on(
 // Login
 // ==========================
 
-client.login(
-  process.env.DISCORD_TOKEN
-);
+console.log("กำลังเชื่อมต่อ Discord...");
+
+client.on("error", error => {
+  console.error("Discord Client Error:", error);
+});
+
+client.on("shardError", error => {
+  console.error("Discord Shard Error:", error);
+});
+
+process.on("unhandledRejection", error => {
+  console.error("Unhandled Rejection:", error);
+});
+
+client.login(process.env.DISCORD_TOKEN)
+  .then(() => {
+    console.log("ส่งคำขอ Login ไป Discord แล้ว");
+  })
+  .catch(error => {
+    console.error("Discord Login ไม่สำเร็จ:", error);
+  });
