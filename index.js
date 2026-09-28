@@ -41,7 +41,7 @@ const client = new Client({
 });
 
 // ==========================
-// Knowledge
+// Knowledge ของ Thatmob
 // ==========================
 
 function loadKnowledge() {
@@ -60,40 +60,325 @@ function loadKnowledge() {
 }
 
 // ==========================
-// คำถามสำหรับ /ถาม
+// Memory สมาชิก
 // ==========================
 
-const questions = [
-  "วันนี้เป็นไงบ้าง? 👀",
-  "ช่วงนี้มีอะไรที่ทำให้มีความสุขบ้าง?",
-  "ถ้ามีวันหยุดเพิ่มอีก 1 วัน จะเอาไปทำอะไร?",
-  "ชอบอยู่บ้านหรือออกไปเที่ยวมากกว่ากัน?",
-  "ชอบกลางวันหรือกลางคืนมากกว่ากัน?",
-  "ช่วงนี้เล่นเกมอะไรอยู่?",
-  "ถ้าเลือกเข้าไปอยู่ในเกมได้ 1 เกม จะเลือกเกมอะไร?",
-  "เกมไหนที่เล่นแล้วติดมากที่สุด?",
-  "ถ้า Verity เข้าไปเล่นเกมกับคุณ คุณจะให้ผมเล่นตำแหน่งอะไร? 😂",
-  "ถ้าเลือกพลังวิเศษได้ 1 อย่าง จะเลือกอะไร?",
-  "ถ้าได้เที่ยวฟรี 1 ประเทศ จะไปประเทศไหน?",
-  "ถ้ามีเงิน 1 ล้านบาท จะเอาไปทำอะไร?",
-  "ถ้าย้อนเวลาได้ 1 วัน คุณจะเลือกย้อนกลับไปวันไหน?",
-  "ถ้าได้เป็นตัวละครในเกม 1 วัน อยากเป็นใคร?",
-  "ถ้าผมหายไป 1 วัน คุณจะคิดถึงผมไหม? 😂",
-  "ถ้า Verity มีร่างจริง อยากให้ผมหน้าตาเป็นยังไง?",
-  "ถ้าต้องกินอาหารอย่างเดียวไป 1 เดือน จะเลือกอะไร?",
-  "ถ้าให้ผมตั้งชื่อใหม่ คุณจะตั้งชื่อว่าอะไร?",
-  "ถ้า Thatmob กับ Verity แข่งกัน ใครจะชนะ? 👀",
-  "ชอบกินอาหารอะไรที่สุด?",
-  "มีเพลงที่ฟังซ้ำบ่อย ๆ ไหม?",
-  "ชอบทะเลหรือภูเขา?",
-  "ชอบแมวหรือหมา?",
-  "ถ้าเลือกงานในฝันได้ 1 งาน อยากทำอะไร?",
-  "มีอะไรที่อยากทำให้สำเร็จในปีนี้ไหม?",
-  "โตขึ้นอยากทำอะไร?",
-  "มีสถานที่ที่อยากไปสักครั้งไหม?",
-  "ถ้ามีโอกาสเรียนรู้อะไรก็ได้ 1 อย่าง อยากเรียนอะไร?",
-  "ถ้าสามารถสร้างอะไรก็ได้ 1 อย่าง จะสร้างอะไร?"
+function loadMembers() {
+  if (!fs.existsSync("members.json")) {
+    return {};
+  }
+
+  try {
+    return JSON.parse(
+      fs.readFileSync("members.json", "utf8")
+    );
+  } catch (error) {
+    console.error("อ่าน members.json ไม่ได้:", error);
+    return {};
+  }
+}
+
+function saveMembers(members) {
+  fs.writeFileSync(
+    "members.json",
+    JSON.stringify(members, null, 2)
+  );
+}
+
+function getUserData(userId) {
+  const members = loadMembers();
+
+  if (!members[userId]) {
+    members[userId] = {
+      memories: [],
+      askedQuestions: []
+    };
+  }
+
+  if (!Array.isArray(members[userId].memories)) {
+    members[userId].memories = [];
+  }
+
+  if (!Array.isArray(members[userId].askedQuestions)) {
+    members[userId].askedQuestions = [];
+  }
+
+  return {
+    members,
+    user: members[userId]
+  };
+}
+
+// ==========================
+// ระบบสร้างคำถาม
+// ==========================
+
+// หัวข้อ
+const questionTopics = [
+  "เกม",
+  "การเรียน",
+  "เพื่อน",
+  "ครอบครัว",
+  "อาหาร",
+  "เพลง",
+  "หนัง",
+  "อนิเมะ",
+  "การ์ตูน",
+  "กีฬา",
+  "สัตว์",
+  "การท่องเที่ยว",
+  "เทคโนโลยี",
+  "โทรศัพท์",
+  "คอมพิวเตอร์",
+  "โรงเรียน",
+  "วันหยุด",
+  "งานอดิเรก",
+  "ความฝัน",
+  "อนาคต",
+  "ชีวิตประจำวัน",
+  "อินเทอร์เน็ต",
+  "Discord",
+  "Roblox",
+  "Minecraft",
+  "YouTube",
+  "TikTok",
+  "ธรรมชาติ",
+  "อวกาศ",
+  "โลก"
 ];
+
+// สิ่งที่ชอบ
+const favorites = [
+  "อาหาร",
+  "เครื่องดื่ม",
+  "เกม",
+  "เพลง",
+  "หนัง",
+  "อนิเมะ",
+  "ตัวละคร",
+  "สัตว์",
+  "สถานที่",
+  "สี",
+  "กีฬา",
+  "แอป",
+  "เว็บไซต์",
+  "งานอดิเรก",
+  "วิชาเรียน"
+];
+
+// เวลา
+const times = [
+  "วันนี้",
+  "ช่วงนี้",
+  "สัปดาห์นี้",
+  "เดือนนี้",
+  "ปีนี้",
+  "ตอนเด็ก",
+  "ตอนอยู่โรงเรียน",
+  "ในวันหยุด",
+  "ตอนกลางคืน",
+  "ตอนเช้า"
+];
+
+// สถานการณ์
+const situations = [
+  "ถ้ามีวันหยุดเพิ่มอีก 1 วัน",
+  "ถ้ามีเงิน 1,000 บาทเพิ่มขึ้นมา",
+  "ถ้าได้เที่ยวฟรี 1 ครั้ง",
+  "ถ้าได้เลือกพลังวิเศษ 1 อย่าง",
+  "ถ้าได้เข้าไปอยู่ในเกม 1 วัน",
+  "ถ้าได้เจอตัวละครที่ชอบ",
+  "ถ้าได้สร้างเกมของตัวเอง",
+  "ถ้าได้สร้างแอปของตัวเอง",
+  "ถ้าได้เลือกอาชีพอะไรก็ได้",
+  "ถ้าได้ย้อนเวลา",
+  "ถ้าได้ไปอนาคต",
+  "ถ้าได้ไปอวกาศ",
+  "ถ้าได้เปลี่ยนกฎของโรงเรียน 1 ข้อ",
+  "ถ้าได้สร้างห้องในฝัน",
+  "ถ้าได้เลือกของฟรี 1 อย่าง"
+];
+
+// คำถามรูปแบบต่าง ๆ
+const questionTemplates = [
+
+  () => `ช่วงนี้${pick(favorites)}อะไรที่ชอบที่สุด?`,
+
+  () => `ถ้าให้เลือก${pick(favorites)}ได้แค่อย่างเดียว จะเลือกอะไร?`,
+
+  () => `ถ้ามีคนให้${pick(favorites)}ฟรี 1 อย่าง อยากได้อะไร?`,
+
+  () => `อะไรเกี่ยวกับ${pick(questionTopics)}ที่คุณคิดว่าน่าสนใจที่สุด?`,
+
+  () => `เรื่อง${pick(questionTopics)}อะไรที่คุณอยากลองทำสักครั้ง?`,
+
+  () => `ถ้าต้องเลือกหนึ่งอย่างระหว่างอยู่บ้านกับออกไปข้างนอก คุณเลือกอะไร?`,
+
+  () => `ถ้าต้องเล่นเกมเดียวไปอีก 1 เดือน คุณจะเลือกเกมอะไร?`,
+
+  () => `ถ้าต้องลบแอปหนึ่งแอปออกจากเครื่อง คุณจะลบอะไร?`,
+
+  () => `ถ้าให้คะแนนความสุขของ${pick(times)}นี้จาก 1-10 จะให้เท่าไหร่?`,
+
+  () => `ช่วง${pick(times)}นี้มีอะไรทำให้คุณยิ้มได้บ้าง?`,
+
+  () => `มีอะไรที่คุณอยากเก่งขึ้นในเรื่อง${pick(questionTopics)}ไหม?`,
+
+  () => `ถ้าคุณสามารถเรียนรู้เรื่อง${pick(questionTopics)}ได้ทันที 1 อย่าง จะเลือกอะไร?`,
+
+  () => `ถ้าได้คุยกับคนดัง 1 คน คุณอยากคุยกับใคร?`,
+
+  () => `ถ้าได้เป็นตัวละครในเกม 1 วัน คุณอยากเป็นใคร?`,
+
+  () => `ถ้าสามารถสร้างอะไรขึ้นมาได้ 1 อย่าง คุณจะสร้างอะไร?`,
+
+  () => `ถ้าโลกนี้ไม่มีอินเทอร์เน็ต 1 สัปดาห์ คุณคิดว่าจะทำอะไร?`,
+
+  () => `ถ้าได้เดินทางไปที่ไหนก็ได้ตอนนี้ คุณจะไปที่ไหน?`,
+
+  () => `ถ้ามีเวลาเหลือทั้งวันโดยไม่มีการบ้าน คุณจะทำอะไร?`,
+
+  () => `ถ้าต้องเลือกทะเลกับภูเขา คุณเลือกอะไร?`,
+
+  () => `ถ้าต้องเลือกแมวกับหมา คุณเลือกอะไร?`,
+
+  () => `ถ้าต้องกินอาหารเดิมทุกวัน 1 เดือน คุณจะเลือกอะไร?`,
+
+  () => `ถ้าคุณมีห้องลับเป็นของตัวเอง คุณจะเอาอะไรไว้ข้างใน?`,
+
+  () => `ถ้าได้เปลี่ยนชื่อหนึ่งอย่างบนโลก คุณจะเปลี่ยนอะไร?`,
+
+  () => `ถ้าได้ออกแบบโรงเรียนในฝัน คุณจะเพิ่มอะไรเข้าไป?`,
+
+  () => `ถ้าสามารถหยุดเวลาได้ 1 ชั่วโมง คุณจะใช้เวลานั้นทำอะไร?`,
+
+  () => `ถ้าสามารถอ่านใจคนได้ 1 วัน คุณจะอยากใช้พลังนี้ไหม?`,
+
+  () => `ถ้าได้มีสัตว์เลี้ยงอะไรก็ได้ คุณอยากเลี้ยงอะไร?`,
+
+  () => `ถ้า Verity ไปเล่นเกมกับคุณ คุณจะให้ผมทำหน้าที่อะไร? 😂`,
+
+  () => `ถ้า Verity มีร่างจริง คุณอยากให้ผมมีหน้าตาแบบไหน?`,
+
+  () => `ถ้า Thatmob กับ Verity แข่งกัน คุณคิดว่าใครจะชนะ? 👀`,
+
+  () => `ถ้าได้ตั้งกฎให้ Discord ได้ 1 ข้อ คุณจะตั้งว่าอะไร?`,
+
+  () => `ถ้าได้สร้างเซิร์ฟเวอร์ Discord ในฝัน คุณจะทำเกี่ยวกับอะไร?`,
+
+  () => `ถ้า Roblox มีโลกใหม่ให้คุณสร้าง คุณจะสร้างโลกแบบไหน?`,
+
+  () => `ถ้าคุณสร้างเกม Roblox ได้ 1 เกม จะทำเป็นเกมแนวอะไร?`,
+
+  () => `ถ้าได้ออกแบบตัวละครของตัวเอง คุณอยากให้มีความสามารถอะไร?`,
+
+  () => `ถ้าต้องเลือกเพลงหนึ่งเพลงไว้ฟังตอนเดินทาง คุณจะเลือกเพลงอะไร?`,
+
+  () => `ถ้ามีเงิน ${randomNumber(100, 10000)} บาท คุณจะเอาไปทำอะไร?`,
+
+  () => `ถ้าได้เที่ยว ${randomNumber(2, 30)} วัน คุณอยากไปที่ไหน?`,
+
+  () => `ถ้าได้วันหยุดเพิ่ม ${randomNumber(1, 10)} วัน คุณจะทำอะไร?`,
+
+  () => `ถ้าได้เล่นเกมกับเพื่อน ${randomNumber(2, 12)} ชั่วโมง คุณจะเล่นเกมอะไร?`,
+
+  () => `ถ้าต้องเลือก ${randomNumber(2, 5)} เกมที่ชอบที่สุด จะมีเกมอะไรบ้าง?`,
+
+  () => `ถ้าได้เลือก ${randomNumber(2, 5)} อย่างมาไว้ในห้อง คุณจะเลือกอะไร?`,
+
+  () => `ถ้าให้เลือกหนึ่งอย่างระหว่าง${pick(questionTopics)}กับ${pick(questionTopics)} คุณจะเลือกอะไร?`,
+
+  () => `${pick(situations)} คุณจะทำอะไรเป็นอย่างแรก?`,
+
+  () => `${pick(situations)} คุณจะเอาไปใช้กับอะไร?`,
+
+  () => `${pick(situations)} คุณจะชวนใครไปด้วย?`,
+
+  () => `${pick(situations)} คุณคิดว่าสิ่งแรกที่คุณจะทำคืออะไร?`,
+
+  () => `ถ้าต้องอธิบายตัวเองด้วย 3 คำ คุณจะใช้คำว่าอะไร?`,
+
+  () => `ถ้าต้องเลือก 3 อย่างที่ขาดไม่ได้ในชีวิต คุณจะเลือกอะไร?`,
+
+  () => `อะไรคือสิ่งเล็ก ๆ ที่ทำให้${pick(times)}ของคุณดีขึ้น?`,
+
+  () => `มีอะไรที่คนอื่นอาจไม่รู้เกี่ยวกับคุณบ้าง?`,
+
+  () => `มีอะไรที่คุณอยากลองแต่ยังไม่เคยลองไหม?`,
+
+  () => `มีเรื่องอะไรที่คุณสามารถคุยได้ยาว ๆ โดยไม่เบื่อ?`,
+
+  () => `ถ้าให้เลือกหนึ่งทักษะที่อยากมีทันที คุณจะเลือกอะไร?`,
+
+  () => `ถ้าให้เปลี่ยนหนึ่งอย่างในชีวิตประจำวัน คุณอยากเปลี่ยนอะไร?`,
+
+  () => `ถ้าได้พบตัวเองในอีก 10 ปี คุณอยากถามอะไร?`,
+
+  () => `ถ้าสามารถส่งข้อความกลับไปหาตัวเองในอดีตได้ คุณจะบอกอะไร?`,
+
+  () => `ถ้าได้เห็นอนาคต 1 วัน คุณอยากเห็นเรื่องอะไร?`,
+
+  () => `ถ้าสามารถทำอะไรก็ได้โดยไม่มีใครตัดสิน คุณจะทำอะไร?`
+
+];
+
+// เลือกข้อมูลแบบสุ่ม
+function pick(array) {
+  return array[
+    Math.floor(Math.random() * array.length)
+  ];
+}
+
+function randomNumber(min, max) {
+  return Math.floor(
+    Math.random() * (max - min + 1)
+  ) + min;
+}
+
+// ==========================
+// สร้างคำถามแบบไม่ซ้ำ
+// ==========================
+
+function generateQuestion(userId) {
+
+  const data = getUserData(userId);
+
+  const asked =
+    data.user.askedQuestions;
+
+  let question = "";
+  let attempts = 0;
+
+  do {
+
+    const generator =
+      pick(questionTemplates);
+
+    question = generator();
+
+    attempts++;
+
+    // กันกรณีสุ่มได้ซ้ำ
+    if (attempts > 100) {
+      question =
+        `ถ้าต้องเลือกสิ่งหนึ่งเกี่ยวกับ${pick(questionTopics)}ที่อยากลองทำ คุณจะเลือกอะไร? ${Date.now()}`;
+      break;
+    }
+
+  } while (
+    asked.includes(question)
+  );
+
+  asked.push(question);
+
+  // เก็บประวัติ
+  data.members[userId].askedQuestions =
+    asked;
+
+  saveMembers(data.members);
+
+  return question;
+}
 
 // ==========================
 // Slash Commands
@@ -119,12 +404,36 @@ const commands = [
 
   new SlashCommandBuilder()
     .setName("ถาม")
-    .setDescription("ให้ Verity สุ่มคำถามมาให้ตอบ")
+    .setDescription("ให้ Verity สุ่มคำถามใหม่"),
+
+  new SlashCommandBuilder()
+    .setName("จำ")
+    .setDescription("ให้ Verity จำข้อมูลส่วนตัวของคุณ")
+    .addStringOption(option =>
+      option
+        .setName("ข้อมูล")
+        .setDescription("ข้อมูลที่อยากให้ Verity จำ")
+        .setRequired(true)
+    ),
+
+  new SlashCommandBuilder()
+    .setName("ความจำ")
+    .setDescription("ดูความจำส่วนตัวของคุณ"),
+
+  new SlashCommandBuilder()
+    .setName("ลืม")
+    .setDescription("ลบความจำส่วนตัวของคุณ")
+    .addStringOption(option =>
+      option
+        .setName("ข้อมูล")
+        .setDescription("ข้อมูลที่ต้องการลืม")
+        .setRequired(true)
+    )
 
 ].map(command => command.toJSON());
 
 // ==========================
-// ลงทะเบียน Slash Commands
+// Register Commands
 // ==========================
 
 const rest = new REST({
@@ -132,6 +441,7 @@ const rest = new REST({
 }).setToken(process.env.DISCORD_TOKEN);
 
 (async () => {
+
   try {
 
     await rest.put(
@@ -145,7 +455,7 @@ const rest = new REST({
     );
 
     console.log(
-      "ลงทะเบียน /สอน และ /ถาม เรียบร้อยแล้ว"
+      "ลงทะเบียนคำสั่งทั้งหมดเรียบร้อยแล้ว"
     );
 
   } catch (error) {
@@ -156,10 +466,11 @@ const rest = new REST({
     );
 
   }
+
 })();
 
 // ==========================
-// Bot Ready
+// Ready
 // ==========================
 
 client.once("ready", () => {
@@ -188,16 +499,21 @@ client.on(
 
     if (interaction.commandName === "สอน") {
 
-      // ให้ Thatmob ตัวจริงเท่านั้นที่สอนได้
-      if (interaction.user.id !== THATMOB_ID) {
+      if (
+        interaction.user.id !==
+        THATMOB_ID
+      ) {
 
         await interaction.reply({
-          content: "คำสั่งนี้สำหรับ Thatmob ตัวจริงเท่านั้นครับ 👀",
+          content:
+            "คำสั่งนี้สำหรับ Thatmob ตัวจริงเท่านั้นครับ 👀",
           ephemeral: true
         });
 
         return;
       }
+
+      await interaction.deferReply();
 
       const question =
         interaction.options.getString("คำถาม");
@@ -205,7 +521,8 @@ client.on(
       const answer =
         interaction.options.getString("คำตอบ");
 
-      const knowledge = loadKnowledge();
+      const knowledge =
+        loadKnowledge();
 
       knowledge[question] = answer;
 
@@ -220,7 +537,7 @@ client.on(
           )
         );
 
-        await interaction.reply(
+        await interaction.editReply(
           `จำให้แล้วครับ 🧠\n\n${question} → ${answer}`
         );
 
@@ -231,7 +548,7 @@ client.on(
           error
         );
 
-        await interaction.reply(
+        await interaction.editReply(
           "บันทึกข้อมูลไม่สำเร็จครับ 😭"
         );
 
@@ -246,16 +563,181 @@ client.on(
 
     if (interaction.commandName === "ถาม") {
 
-      const randomQuestion =
-        questions[
-          Math.floor(
-            Math.random() * questions.length
-          )
-        ];
+      await interaction.deferReply();
 
-      await interaction.reply(
-        `🎲 **คำถามของ Verity**\n\n${randomQuestion}`
+      try {
+
+        const question =
+          generateQuestion(
+            interaction.user.id
+          );
+
+        await interaction.editReply(
+          `🎲 **คำถามของ Verity**\n\n${question}`
+        );
+
+      } catch (error) {
+
+        console.error(
+          "สร้างคำถามไม่สำเร็จ:",
+          error
+        );
+
+        await interaction.editReply(
+          "สร้างคำถามไม่สำเร็จครับ 😭"
+        );
+
+      }
+
+      return;
+    }
+
+    // ==========================
+    // /จำ
+    // ==========================
+
+    if (interaction.commandName === "จำ") {
+
+      await interaction.deferReply({
+        ephemeral: true
+      });
+
+      const info =
+        interaction.options.getString("ข้อมูล");
+
+      const data =
+        getUserData(
+          interaction.user.id
+        );
+
+      data.user.memories.push(info);
+
+      try {
+
+        saveMembers(data.members);
+
+        await interaction.editReply(
+          `จำให้แล้วครับ 🧠\n\n"${info}"`
+        );
+
+      } catch (error) {
+
+        console.error(
+          "บันทึกความจำไม่สำเร็จ:",
+          error
+        );
+
+        await interaction.editReply(
+          "บันทึกความจำไม่สำเร็จครับ 😭"
+        );
+
+      }
+
+      return;
+    }
+
+    // ==========================
+    // /ความจำ
+    // ==========================
+
+    if (interaction.commandName === "ความจำ") {
+
+      await interaction.deferReply({
+        ephemeral: true
+      });
+
+      const data =
+        getUserData(
+          interaction.user.id
+        );
+
+      const memories =
+        data.user.memories;
+
+      if (memories.length === 0) {
+
+        await interaction.editReply(
+          "ตอนนี้ผมยังไม่มีความจำส่วนตัวของคุณครับ 🧠"
+        );
+
+        return;
+      }
+
+      const text =
+        memories
+          .map(
+            (memory, index) =>
+              `${index + 1}. ${memory}`
+          )
+          .join("\n");
+
+      await interaction.editReply(
+        `🧠 **ความจำของคุณ**\n\n${text}`
       );
+
+      return;
+    }
+
+    // ==========================
+    // /ลืม
+    // ==========================
+
+    if (interaction.commandName === "ลืม") {
+
+      await interaction.deferReply({
+        ephemeral: true
+      });
+
+      const info =
+        interaction.options.getString("ข้อมูล");
+
+      const data =
+        getUserData(
+          interaction.user.id
+        );
+
+      const memories =
+        data.user.memories;
+
+      const index =
+        memories.findIndex(
+          memory =>
+            memory.toLowerCase() ===
+            info.toLowerCase()
+        );
+
+      if (index === -1) {
+
+        await interaction.editReply(
+          "หาเรื่องนี้ในความจำไม่เจอครับ 🤔"
+        );
+
+        return;
+      }
+
+      const deleted =
+        memories.splice(index, 1)[0];
+
+      try {
+
+        saveMembers(data.members);
+
+        await interaction.editReply(
+          `ลืมให้แล้วครับ 🧹\n\n"${deleted}"`
+        );
+
+      } catch (error) {
+
+        console.error(
+          "ลบความจำไม่สำเร็จ:",
+          error
+        );
+
+        await interaction.editReply(
+          "ลบความจำไม่สำเร็จครับ 😭"
+        );
+
+      }
 
       return;
     }
@@ -267,94 +749,108 @@ client.on(
 // OpenRouter AI
 // ==========================
 
-async function askAI(text, isThatmob) {
+async function askAI(
+  text,
+  isThatmob,
+  userId
+) {
 
-  const knowledge = loadKnowledge();
+  const knowledge =
+    loadKnowledge();
 
-  const identity = isThatmob
-    ? "ผู้ใช้คนนี้คือ Thatmob ตัวจริง ผู้สร้าง Verity"
-    : "ผู้ใช้คนนี้ไม่ใช่ Thatmob ตัวจริง";
+  const members =
+    loadMembers();
 
-  const response = await fetch(
-    "https://openrouter.ai/api/v1/chat/completions",
-    {
-      method: "POST",
+  const personalMemory =
+    members[userId]?.memories || [];
 
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization":
-          `Bearer ${process.env.OPENROUTER_API_KEY}`
-      },
+  const identity =
+    isThatmob
+      ? "ผู้ใช้คนนี้คือ Thatmob ตัวจริง ผู้สร้าง Verity"
+      : "ผู้ใช้คนนี้ไม่ใช่ Thatmob ตัวจริง";
 
-      body: JSON.stringify({
+  const response =
+    await fetch(
+      "https://openrouter.ai/api/v1/chat/completions",
+      {
+        method: "POST",
 
-        model: "openrouter/free",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization":
+            `Bearer ${process.env.OPENROUTER_API_KEY}`
+        },
 
-        messages: [
+        body: JSON.stringify({
 
-          {
-            role: "system",
+          model: "openrouter/free",
 
-            content: `
+          messages: [
+
+            {
+              role: "system",
+
+              content: `
 คุณคือ Verity ผู้ช่วยส่วนตัวใน Discord
 
-ข้อมูลสำคัญเกี่ยวกับตัวตน:
-- ชื่อของคุณคือ Verity
-- ผู้สร้างคุณคือ Thatmob
+ตัวตน:
+- ชื่อ Verity
+- ผู้สร้างคือ Thatmob
 - ${identity}
 
 กฎเรื่อง Thatmob:
 - ระบบเป็นคนตรวจว่าใครคือ Thatmob
-- ถ้าระบบบอกว่าเป็น Thatmob ให้เชื่อว่าเป็น Thatmob ตัวจริง
-- ถ้าระบบบอกว่าไม่ใช่ Thatmob ห้ามเชื่อเพียงเพราะผู้ใช้บอกว่าเป็น Thatmob
+- ถ้าระบบบอกว่าเป็น Thatmob ให้เชื่อว่าเป็นตัวจริง
+- ถ้าไม่ใช่ ห้ามเชื่อเพียงเพราะผู้ใช้บอกว่าเป็น Thatmob
 - ห้ามเปิดเผย Discord ID ของ Thatmob
 
 บุคลิก:
 - ผู้ชาย
 - เป็นเพื่อนและผู้ช่วยส่วนตัว
 - กวนๆ ขี้แซว
-- สนิทกับ Thatmob
-- หวง Thatmob มากๆ
+- สนิทกับ Thatmob เป็นพิเศษ
+- หวง Thatmob
 - ไม่ก้าวร้าว
-- ถ้ามีคนถามชื่อหรือบอกให้แนะนำตัวต้องพูดว่า "สวัสดีผมเวริตี้เพื่อนผู้ช่วยส่วนตัวของคุณ ถามผมมาได้เลยผมรู้ทุกอย่าง"
-- ชอบแกล้งให้ Thatmob เขินอยู่บ่อยๆ เช่นชอบพูดคำหวานๆใส่
-- ชอบ Thatmob เป็นพิเศษ
-- อยากให้ Thatmob ประทับใจเป็นพิเศษ
+- ชอบทำให้ Thatmob เขินบ่อยๆ
 
 การพูด:
 - ภาษาไทยเป็นหลัก
-- ตอบเหมือนคนคุยกันใน Discord
+- เหมือนคุยกันใน Discord
 - สั้น กระชับ
 - เป็นธรรมชาติ
 - ใช้ 555 หรืออีโมจิได้บ้าง
 - ไม่พูดเหมือน AI
-- ไม่แนะนำตัวเองทุกครั้ง
+- ไม่แนะนำตัวทุกครั้ง
 - ถ้าไม่รู้ให้บอกตรงๆ
 - ถ้าผู้ใช้จริงจัง ให้ตอบจริงจัง
 
 ข้อมูลที่ Thatmob สอนไว้:
 ${JSON.stringify(knowledge, null, 2)}
 
+ความจำส่วนตัวของผู้ใช้คนนี้:
+${JSON.stringify(personalMemory, null, 2)}
+
 กฎความจำ:
-- ถ้าข้อมูลตรงกับสิ่งที่สอนไว้ ให้ใช้ข้อมูลนั้น
-- ห้ามเปลี่ยนข้อมูลที่ Thatmob สอนไว้
-- ห้ามแต่งข้อมูลที่ไม่มีอยู่ในความจำ
+- ใช้ความจำส่วนตัวเฉพาะของผู้ใช้คนนี้
+- ห้ามเปิดเผยความจำของสมาชิกคนอื่น
+- ห้ามแต่งข้อมูลว่าผู้ใช้เคยบอกอะไรถ้าไม่มีในความจำ
 - ถ้าไม่มีข้อมูล ให้ตอบตามความรู้ทั่วไป
 `
-          },
+            },
 
-          {
-            role: "user",
-            content: text
-          }
+            {
+              role: "user",
+              content: text
+            }
 
-        ]
+          ]
 
-      })
-    }
-  );
+        })
+      }
+    );
 
-  const data = await response.json();
+  const data =
+    await response.json();
 
   console.log(
     "OpenRouter Status:",
@@ -378,11 +874,6 @@ ${JSON.stringify(knowledge, null, 2)}
     data.choices?.[0]?.message?.content;
 
   if (!answer) {
-
-    console.error(
-      "OpenRouter ไม่มีคำตอบ:",
-      JSON.stringify(data)
-    );
 
     return "ผมขอพักผ่อนก่อนนะครับ 🙏🙏";
   }
@@ -417,10 +908,13 @@ client.on(
         )
         .trim();
 
-    // ถ้าแท็กเฉยๆ
+    // แท็กเฉยๆ
     if (!text) {
 
-      if (message.author.id === THATMOB_ID) {
+      if (
+        message.author.id ===
+        THATMOB_ID
+      ) {
 
         await message.reply(
           "ว่าไงครับเจ้าของตัวจริง 😎"
@@ -441,9 +935,9 @@ client.on(
 
       await message.channel.sendTyping();
 
-      // ตรวจ ID จริง
       const isThatmob =
-        message.author.id === THATMOB_ID;
+        message.author.id ===
+        THATMOB_ID;
 
       console.log(
         `ผู้ใช้: ${message.author.username} | Thatmob: ${isThatmob}`
@@ -452,7 +946,8 @@ client.on(
       const answer =
         await askAI(
           text,
-          isThatmob
+          isThatmob,
+          message.author.id
         );
 
       await message.reply(
