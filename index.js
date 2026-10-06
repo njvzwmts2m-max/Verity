@@ -972,8 +972,6 @@ ${JSON.stringify(personalMemory, null, 2)}
     "OpenRouter และ Groq ไม่สามารถใช้งานได้"
   );
 }
-  const data =
-    await response.json();
 
   console.log(
     "OpenRouter Status:",
