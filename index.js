@@ -991,16 +991,8 @@ ${JSON.stringify(personalMemory, null, 2)}
     );
   }
 
-  const answer =
-    data.choices?.[0]?.message?.content;
+  
 
-  if (!answer) {
-
-    return "ผมขอพักผ่อนก่อนนะครับ 🙏🙏";
-  }
-
-  return answer;
-}
 
 // ==========================
 // @Verity
