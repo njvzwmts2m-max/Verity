@@ -973,16 +973,6 @@ ${JSON.stringify(personalMemory, null, 2)}
   );
 }
 
-  
-    throw new Error(
-      data?.error?.message ||
-      `OpenRouter HTTP ${response.status}`
-    );
-  }
-
-  
-
-
 // ==========================
 // @Verity
 // ==========================
