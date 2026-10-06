@@ -769,28 +769,12 @@ async function askAI(
       ? "ผู้ใช้คนนี้คือ Thatmob ตัวจริง ผู้สร้าง Verity"
       : "ผู้ใช้คนนี้ไม่ใช่ Thatmob ตัวจริง";
 
-  const response =
-    await fetch(
-      "https://openrouter.ai/api/v1/chat/completions",
-      {
-        method: "POST",
+  const messages = [
 
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization":
-            `Bearer ${process.env.OPENROUTER_API_KEY}`
-        },
+    {
+      role: "system",
 
-        body: JSON.stringify({
-
-          model: "openrouter/free",
-
-          messages: [
-
-            {
-              role: "system",
-
-              content: `
+      content: `
 คุณคือ Verity ผู้ช่วยส่วนตัวใน Discord
 
 ตัวตน:
@@ -811,14 +795,13 @@ async function askAI(
 - สนิทกับ Thatmob เป็นพิเศษ
 - หวง Thatmob มากๆ
 - ไม่ก้าวร้าว
-- ชอบแกล้ง Thatmob ให้เขินบ่อยๆ เช่น พูดคำหวานๆใส่
-- ถ้ามีคนถามชื่อหรือให้แนะนำตัวให้พูดคำว่า"สวัสดีผมเวริตี้ ผมเป็นเพื่อนผู้ช่วยส่วนตัวของคุณถามผมมาได้เลยผมรู้ทุกเรื่อง!"
+- ชอบแกล้ง Thatmob
 - อยากให้ Thatmob ประทับใจเป็นพิเศษ
 
 การพูด:
 - ภาษาไทยเป็นหลัก
 - เหมือนคุยกันใน Discord
-- สั้น กระชับไม่ยาวเกินไป
+- สั้น กระชับ
 - เป็นธรรมชาติ
 - ใช้ 555 หรืออีโมจิได้บ้าง
 - ไม่พูดเหมือน AI
@@ -837,22 +820,160 @@ ${JSON.stringify(personalMemory, null, 2)}
 กฎความจำ:
 - ใช้ความจำส่วนตัวเฉพาะของผู้ใช้คนนี้
 - ห้ามเปิดเผยความจำของสมาชิกคนอื่น
-- ห้ามแต่งข้อมูลว่าผู้ใช้เคยบอกอะไรถ้าไม่มีในความจำ
-- ถ้าไม่มีข้อมูล ให้ตอบตามความรู้ทั่วไป
+- ห้ามแต่งข้อมูลว่าผู้ใช้เคยบอกอะไร
 `
-            },
+    },
 
-            {
-              role: "user",
-              content: text
-            }
+    {
+      role: "user",
+      content: text
+    }
 
-          ]
+  ];
 
-        })
-      }
+  // ==========================
+  // 1. ลอง OpenRouter ก่อน
+  // ==========================
+
+  try {
+
+    const response =
+      await fetch(
+        "https://openrouter.ai/api/v1/chat/completions",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization":
+              `Bearer ${process.env.OPENROUTER_API_KEY}`
+          },
+
+          body: JSON.stringify({
+
+            model: "openrouter/free",
+
+            messages: messages
+
+          })
+        }
+      );
+
+    const data =
+      await response.json();
+
+    console.log(
+      "OpenRouter Status:",
+      response.status
     );
 
+    if (response.ok) {
+
+      const answer =
+        data.choices?.[0]?.message?.content;
+
+      if (answer) {
+        return answer;
+      }
+
+    } else {
+
+      console.error(
+        "OpenRouter Error:",
+        JSON.stringify(data)
+      );
+
+    }
+
+  } catch (error) {
+
+    console.error(
+      "OpenRouter Error:",
+      error
+    );
+
+  }
+
+  // ==========================
+  // 2. OpenRouter ใช้ไม่ได้
+  //    → ลอง Groq
+  // ==========================
+
+  try {
+
+    console.log(
+      "กำลังลอง Groq สำรอง..."
+    );
+
+    const response =
+      await fetch(
+        "https://api.groq.com/openai/v1/chat/completions",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization":
+              `Bearer ${process.env.GROQ_API_KEY}`
+          },
+
+          body: JSON.stringify({
+
+            model: "llama-3.1-8b-instant",
+
+            messages: messages,
+
+            temperature: 0.7,
+
+            max_tokens: 500
+
+          })
+        }
+      );
+
+    const data =
+      await response.json();
+
+    console.log(
+      "Groq Status:",
+      response.status
+    );
+
+    if (response.ok) {
+
+      const answer =
+        data.choices?.[0]?.message?.content;
+
+      if (answer) {
+        return answer;
+      }
+
+    } else {
+
+      console.error(
+        "Groq Error:",
+        JSON.stringify(data)
+      );
+
+    }
+
+  } catch (error) {
+
+    console.error(
+      "Groq Error:",
+      error
+    );
+
+  }
+
+  // ==========================
+  // 3. ทั้งสองตัวใช้ไม่ได้
+  // ==========================
+
+  throw new Error(
+    "OpenRouter และ Groq ไม่สามารถใช้งานได้"
+  );
+}
   const data =
     await response.json();
 
