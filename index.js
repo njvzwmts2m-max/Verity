@@ -973,18 +973,7 @@ ${JSON.stringify(personalMemory, null, 2)}
   );
 }
 
-  console.log(
-    "OpenRouter Status:",
-    response.status
-  );
-
-  if (!response.ok) {
-
-    console.error(
-      "OpenRouter Error:",
-      JSON.stringify(data)
-    );
-
+  
     throw new Error(
       data?.error?.message ||
       `OpenRouter HTTP ${response.status}`
