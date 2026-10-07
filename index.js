@@ -849,7 +849,8 @@ ${JSON.stringify(personalMemory, null, 2)}
 
           body: JSON.stringify({
 
-            model: "llama-3.3-70b-versatile",
+            // OpenRouter
+model: "openrouter/free",
 
             messages: messages
 
@@ -917,7 +918,7 @@ ${JSON.stringify(personalMemory, null, 2)}
 
           body: JSON.stringify({
 
-            model: "llama-3.3-70b-versatile",
+            model: "openai/gpt-oss-20b",
 
             messages: messages,
 
