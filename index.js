@@ -966,14 +966,16 @@ try {
     );
   }
 
-} catch (error) {
+   } catch (error) {
 
-  console.error(
-    "Groq Error:",
-    error
-  );
+    console.error(
+      "Groq Error:",
+      error
+    );
 
-}
+  }
+
+} // ปิด askAI
 
 // ==========================
 // @Verity
