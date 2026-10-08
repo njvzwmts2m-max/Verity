@@ -895,84 +895,84 @@ model: "openrouter/free",
   }
 
   // ==========================
-  // 2. OpenRouter ใช้ไม่ได้
-  //    → ลอง Groq
-  // ==========================
+// → ลอง Groq
+// ==========================
 
-  try {
+try {
 
-    console.log(
-      "กำลังลอง Groq สำรอง..."
-    );
+  console.log("กำลังลอง Groq สำรอง...");
 
-    const response =
-      await fetch(
-        "https://api.groq.com/openai/v1/chat/completions",
-        {
-          method: "POST",
+  const response = await fetch(
+    "https://api.groq.com/openai/v1/chat/completions",
+    {
+      method: "POST",
 
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization":
-              `Bearer ${process.env.GROQ_API_KEY}`
-          },
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization":
+          `Bearer ${process.env.GROQ_API_KEY}`
+      },
 
-          body: JSON.stringify({
-
-            model: "openai/gpt-oss-20b",
-
-            messages: messages,
-
-            temperature: 0.7,
-
-            max_tokens: 200
-
-          })
-        }
-      );
-
-    const data =
-      await response.json();
-
-    console.log(
-      "Groq Status:",
-      response.status
-    );
-
-    if (response.ok) {
-
-      const answer =
-        data.choices?.[0]?.message?.content;
-
-      if (answer) {
-        return answer;
-      }
-
-    } else {
-
-      console.error(
-        "Groq Error:",
-        JSON.stringify(data)
-      );
-
+      body: JSON.stringify({
+        model: "openai/gpt-oss-20b",
+        messages: messages,
+        temperature: 0.7,
+        max_completion_tokens: 300,
+        reasoning_effort: "low",
+        stream: false
+      })
     }
+  );
 
-  } catch (error) {
+  const data = await response.json();
+
+  console.log(
+    "Groq Status:",
+    response.status
+  );
+
+  // ดูข้อมูลที่ Groq ส่งกลับมา
+  console.log(
+    "Groq Response:",
+    JSON.stringify(data)
+  );
+
+  if (!response.ok) {
 
     console.error(
       "Groq Error:",
-      error
+      JSON.stringify(data)
     );
 
+  } else {
+
+    const answer =
+      data?.choices?.[0]?.message?.content;
+
+    if (
+      typeof answer === "string" &&
+      answer.trim().length > 0
+    ) {
+
+      console.log("Groq ตอบสำเร็จ");
+
+      return answer.trim();
+
+    }
+
+    console.error(
+      "Groq ตอบมาแต่ไม่มีข้อความ:",
+      JSON.stringify(data)
+    );
   }
 
-  // ==========================
-  // 3. ทั้งสองตัวใช้ไม่ได้
-  // ==========================
+} catch (error) {
 
-  throw new Error(
-    "OpenRouter และ Groq ไม่สามารถใช้งานได้"
+  console.error(
+    "Groq Error:",
+    error
   );
+
 }
 
 // ==========================
