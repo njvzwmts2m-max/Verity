@@ -727,68 +727,7 @@ client.on(
 
       const deleted =
         memories.splice(index, 1)[0];
-
-      try {
-
-        saveMembers(data.members);
-
-        await interaction.editReply(
-          `ลืมให้แล้วครับ 🧹\n\n"${deleted}"`
-        );
-
-      } catch (error) {
-
-        console.error(
-          "ลบความจำไม่สำเร็จ:",
-          error
-        );
-
-        await interaction.editReply(
-          "ลบความจำไม่สำเร็จครับ 😭"
-        );
-
-      }
-
-      return;
-    }
-
-  }
-);
-    // ==========================
-    // /เข้าห้องเสียง
-    // ==========================
-
-    if (interaction.commandName === "เข้าห้องเสียง") {
-      await interaction.deferReply();
-
-      try {
-        const voiceChannel =
-          interaction.guild
-            ? interaction.member?.voice?.channel
-            : null;
-
-        if (!voiceChannel) {
-          await interaction.editReply(
-            "เข้าห้องเสียงใน Discord ก่อนนะครับ แล้วค่อยเรียกผม 🎧"
-          );
-          return;
-        }
-
-        const connection = joinVoiceChannel({
-          channelId: voiceChannel.id,
-          guildId: interaction.guildId,
-          adapterCreator:
-            interaction.guild.voiceAdapterCreator,
-          selfDeaf: true
-        });
-
-        await entersState(
-          connection,
-          VoiceConnectionStatus.Ready,
-          20000
-        );
-
-        await interaction.editReply(
+ await interaction.editReply(
           `เข้าห้องเสียง ${voiceChannel.name} แล้วครับ 🎧`
         );
 
@@ -806,6 +745,10 @@ client.on(
 
       return;
     }
+
+}
+);
+
 // ==========================
 // OpenRouter AI
 // ==========================
