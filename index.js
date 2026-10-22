@@ -9,6 +9,12 @@ const {
   SlashCommandBuilder
 } = require("discord.js");
 
+const {
+  joinVoiceChannel,
+  entersState,
+  VoiceConnectionStatus
+} = require("@discordjs/voice");
+
 // ==========================
 // THATMOB ตัวจริง
 // ==========================
@@ -420,7 +426,7 @@ const commands = [
     .setName("ความจำ")
     .setDescription("ดูความจำส่วนตัวของคุณ"),
 
-  new SlashCommandBuilder()
+    new SlashCommandBuilder()
     .setName("ลืม")
     .setDescription("ลบความจำส่วนตัวของคุณ")
     .addStringOption(option =>
@@ -428,7 +434,11 @@ const commands = [
         .setName("ข้อมูล")
         .setDescription("ข้อมูลที่ต้องการลืม")
         .setRequired(true)
-    )
+    ),
+
+  new SlashCommandBuilder()
+    .setName("เข้าห้องเสียง")
+    .setDescription("ให้ Verity เข้าห้องเสียงที่คุณอยู่")
 
 ].map(command => command.toJSON());
 
