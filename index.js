@@ -752,16 +752,12 @@ client.on(
       return;
     }
 
+  
     // ==========================
     // /เข้าห้องเสียง
     // ==========================
 
     if (interaction.commandName === "เข้าห้องเสียง") {
-      // วางโค้ดเข้าห้องเสียงเดิมทั้งหมดตรงนี้
-    }
-
-  }
-); {
       await interaction.deferReply();
 
       try {
@@ -810,12 +806,13 @@ client.on(
       return;
     }
 
-}
+  }
 );
 
 // ==========================
 // OpenRouter AI
 // ==========================
+
 
 async function askAI(
   text,
