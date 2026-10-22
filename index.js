@@ -754,7 +754,58 @@ client.on(
 
   }
 );
+    // ==========================
+    // /เข้าห้องเสียง
+    // ==========================
 
+    if (interaction.commandName === "เข้าห้องเสียง") {
+      await interaction.deferReply();
+
+      try {
+        const voiceChannel =
+          interaction.guild
+            ? interaction.member?.voice?.channel
+            : null;
+
+        if (!voiceChannel) {
+          await interaction.editReply(
+            "เข้าห้องเสียงใน Discord ก่อนนะครับ แล้วค่อยเรียกผม 🎧"
+          );
+          return;
+        }
+
+        const connection = joinVoiceChannel({
+          channelId: voiceChannel.id,
+          guildId: interaction.guildId,
+          adapterCreator:
+            interaction.guild.voiceAdapterCreator,
+          selfDeaf: true
+        });
+
+        await entersState(
+          connection,
+          VoiceConnectionStatus.Ready,
+          20000
+        );
+
+        await interaction.editReply(
+          `เข้าห้องเสียง ${voiceChannel.name} แล้วครับ 🎧`
+        );
+
+      } catch (error) {
+        console.error(
+          "เข้าห้องเสียงไม่สำเร็จ:",
+          error?.stack || error
+        );
+
+        await interaction.editReply({
+          content:
+            `เข้าห้องเสียงไม่สำเร็จครับ\nสาเหตุ: ${error?.message || "ไม่ทราบสาเหตุ"}`
+        }).catch(() => {});
+      }
+
+      return;
+    }
 // ==========================
 // OpenRouter AI
 // ==========================
